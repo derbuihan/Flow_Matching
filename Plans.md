@@ -117,8 +117,8 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 
 各候補を同じ短縮条件で比較し、明らかに劣る候補を除外する。
 
-- [ ] 短縮条件を決めて記録する（例: 5 epoch）
-- [ ] baselineを短縮条件で実行する
+- [x] 短縮条件を決めて記録する（5 epoch、seed 42、他条件は標準条件）
+- [x] baselineを短縮条件で実行する
 - [ ] `resblock-film`を実行する
 - [ ] `no-bottleneck-attention`を実行する
 - [ ] `upsample-conv`を実行する
@@ -170,6 +170,14 @@ Validation loss: 未記録
 checkpoint: `unet_model_20.pt`
 所見: 比較用baselineとして利用可能。validation loss、loss曲線artifact、時間計測は未確認。
 採用判断: baselineのため採用判断は不要
+
+短縮スクリーニング（5 epoch）:
+
+```text
+Train loss: 0.3483 → 0.2156
+Validation loss: 0.2614 → 0.2125
+所見: E1との同条件比較用。正常終了、曲線・checkpoint・生成画像あり。
+```
 ```
 
 ### E1: Residual Block + FiLM
