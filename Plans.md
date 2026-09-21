@@ -167,9 +167,9 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 
 E1 `resblock-film`を基準に、8×8・256チャンネルのSelf-Attentionを追加する。E4単独ではbaselineに対して改善したため、E1との組み合わせ効果を独立実験として検証する。
 
-- [ ] E6 `resblock-film + attention-8x8`をfeatureブランチで実装する
-- [ ] 構文チェックと小さなforwardを実行する
-- [ ] パラメータ数と計算時間を記録する
+- [x] E6 `resblock-film + attention-8x8`をfeatureブランチで実装する
+- [x] 構文チェックと小さなforwardを実行する
+- [x] パラメータ数と計算時間を記録する
 - [ ] 5 epochでbaseline E1とスクリーニング比較する
 - [ ] 20 epochでE1と正式比較する
 - [ ] 生成画像、loss曲線、checkpoint、MLflow Runを確認する
@@ -361,14 +361,14 @@ Validation loss: 0.2856 → 0.1944（20 epoch）
 
 ### E6: Residual Block + FiLM + 8×8 Attention
 
-- [ ] `main`から`feature/resblock-film-attention-8x8`を作成
-- [ ] E1のResidual Block + FiLMを維持する
-- [ ] 8×8・256チャンネルにSelf-Attentionを追加する
-- [ ] 4×4 Transformerを維持する
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] パラメータ数を記録する
-- [ ] 変更をcommitする
+- [x] `main`から`feature/resblock-film-attention-8x8`を作成
+- [x] E1のResidual Block + FiLMを維持する
+- [x] 8×8・256チャンネルにSelf-Attentionを追加する
+- [x] 4×4 Transformerを維持する
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] パラメータ数を記録する
+- [x] 変更をcommitする
 - [ ] 5 epochスクリーニングを実行する
 - [ ] 20 epoch標準実験を実行する
 - [ ] E1とvalidation loss、生成画像、計算量を比較する
