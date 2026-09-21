@@ -211,25 +211,25 @@ Validation loss: 0.2470 → 0.1909（20 epoch）
 
 ### E2: Upsample + Conv
 
-- [ ] `main`から`feature/upsample-conv`を作成
-- [ ] `ConvTranspose2d`をUpsample + Conv2dへ変更
-- [ ] U-Netの解像度とskip接続を維持する
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] 変更をcommitする
-- [ ] Phase 1の短縮実験を実行する
+- [x] `main`から`feature/upsample-conv`を作成
+- [x] `ConvTranspose2d`をUpsample + Conv2dへ変更
+- [x] U-Netの解像度とskip接続を維持する
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] 変更をcommitする
+- [x] Phase 1の短縮実験を実行する
 - [ ] 生成画像のアーティファクトを確認する
 - [ ] Phase 2へ進めるか判断する
 
 結果:
 
 ```text
-Run:
-Train loss:
-Validation loss:
-生成画像:
-所見:
-採用判断:
+Run: 最新MLflow Run / `upsample-conv` / FINISHED
+Train loss: 0.3561 → 0.2156（5 epoch）
+Validation loss: 0.2614 → 0.2131（5 epoch）
+生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
+所見: baseline（validation 0.2125）より0.3%悪化。明確な改善なし。
+採用判断: 不採用。標準20 epochには進めない。
 ```
 
 ### E3: Transformerなし
