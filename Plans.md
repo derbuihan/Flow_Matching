@@ -230,6 +230,9 @@ Validation loss: 0.2614 → 0.2125
 - [x] Phase 1の短縮実験を実行する
 - [x] Phase 2の標準実験を実行する
 - [x] baselineと比較する
+- [x] 20 epoch時点の採用判断を保留し、100 epoch再検証へ進める
+- [x] 100 epochでE1と同一seed・同一条件で比較する
+- [x] 100 epochのvalidation loss、loss曲線、生成画像、checkpoint、学習時間を確認する
 - [x] 採用または不採用を判断する
 
 結果:
@@ -396,7 +399,41 @@ Validation loss: seed 42 = 0.1901、seed 123 = 0.1919、seed 456 = 0.1917（20 e
 パラメータ数: 16,168,457
 学習時間: 349.509〜548.629秒
 所見: seed 42ではE1を改善したが、seed 123/456ではE1を改善しなかった。改善が安定せず、パラメータ数と計算時間も増加。
-採用判断: 20 epochでは不採用とした。100 epochでE1と再比較するまで最終判断を保留する。
+採用判断: 20 epochでは不採用とした。100 epoch再検証の結果、E6のvalidation lossは0.180823、E1は0.182780でE6が0.001957（約1.07%）低かった。ただし100 epochの追加seed検証は未実施で、20 epochでは3 seed中1 seedのみ改善だったため、改善の再現性は未確認。mainにはマージせず、採用済みE1を維持する。
+```
+
+### Phase 6: E6の100 epoch再比較
+
+- [x] E6をseed `42`・100 epochで実行する
+- [x] E1をseed `42`・100 epochで実行する
+- [x] epoch 100のvalidation lossを比較する
+- [x] 途中epochのloss曲線も比較する
+- [x] 生成画像とcheckpointを確認する
+- [x] 計算時間とパラメータ数を比較する
+- [x] E6を採用または不採用と判断する
+
+結果:
+
+```text
+条件: CIFAR-10、seed 42、batch size 128、learning rate 2e-4、Heun法、sampling steps 50
+
+E6 Run: `157666ed28494b2f96e84f35783865cf` / FINISHED
+- epoch 100 train loss: 0.179799
+- epoch 100 validation loss: 0.180823
+- 最良validation loss: 約0.1779（epoch 93）
+- パラメータ数: 16,168,457
+- 学習時間: 約1,635.274秒
+- artifacts: `generated.png`、`loss_curve.png`、`unet_model_100.pt`
+
+E1 Run: `fd4d15fce2ff42d9bdc6bc2832b50f1b` / FINISHED
+- epoch 100 train loss: 0.180892
+- epoch 100 validation loss: 0.182780
+- 途中の最良validation loss: 約0.1785（epoch 93）
+- パラメータ数: 15,362,313
+- 学習時間: 1,565.720秒
+- artifacts: `generated.png`、`loss_curve.png`、`unet_model_100.pt`
+
+判断: E6はepoch 100のvalidation lossでE1より0.001957（約1.07%）改善し、学習後半で逆転した。ただし20 epochの3 seed検証ではE6の改善がseed 42に限定され、seed 123/456ではE1に負けている。100 epochでseed 42以外を再検証していないため、安定した精度向上とは判断しない。E6はmainへマージせず、E1を採用モデルとして維持する。
 ```
 
 ## 採用判断の基準
