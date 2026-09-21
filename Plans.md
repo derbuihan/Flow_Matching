@@ -167,14 +167,26 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 
 E1 `resblock-film`を基準に、8×8・256チャンネルのSelf-Attentionを追加する。E4単独ではbaselineに対して改善したため、E1との組み合わせ効果を独立実験として検証する。
 
-- [ ] E6 `resblock-film + attention-8x8`をfeatureブランチで実装する
-- [ ] 構文チェックと小さなforwardを実行する
-- [ ] パラメータ数と計算時間を記録する
-- [ ] 5 epochでbaseline E1とスクリーニング比較する
-- [ ] 20 epochでE1と正式比較する
-- [ ] 生成画像、loss曲線、checkpoint、MLflow Runを確認する
-- [ ] 必要ならseed 123/456で再検証する
-- [ ] E1より改善が安定した場合だけmainへマージする
+- [x] E6 `resblock-film + attention-8x8`をfeatureブランチで実装する
+- [x] 構文チェックと小さなforwardを実行する
+- [x] パラメータ数と計算時間を記録する
+- [x] 5 epochでbaseline E1とスクリーニング比較する
+- [x] 20 epochでE1と正式比較する
+- [x] 生成画像、loss曲線、checkpoint、MLflow Runを確認する
+- [x] 必要ならseed 123/456で再検証する
+- [x] E1より改善が安定した場合だけmainへマージする
+
+### Phase 6: E6の100 epoch再比較
+
+20 epochではE6のseed間改善が安定しなかったため、学習後半で逆転する可能性を確認する。E6と採用済みE1を同じseed `42`、batch size、learning rate、DataLoader条件で100 epochまで実行し、epoch 100のvalidation loss、生成画像、loss曲線、学習時間を比較する。
+
+- [ ] E6をseed `42`・100 epochで実行する
+- [ ] E1をseed `42`・100 epochで実行する
+- [ ] epoch 100のvalidation lossを比較する
+- [ ] 途中epochのloss曲線も比較する
+- [ ] 生成画像とcheckpointを確認する
+- [ ] 計算時間とパラメータ数を比較する
+- [ ] E6を採用または不採用と判断する
 
 ## 実験カード
 
@@ -361,30 +373,30 @@ Validation loss: 0.2856 → 0.1944（20 epoch）
 
 ### E6: Residual Block + FiLM + 8×8 Attention
 
-- [ ] `main`から`feature/resblock-film-attention-8x8`を作成
-- [ ] E1のResidual Block + FiLMを維持する
-- [ ] 8×8・256チャンネルにSelf-Attentionを追加する
-- [ ] 4×4 Transformerを維持する
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] パラメータ数を記録する
-- [ ] 変更をcommitする
-- [ ] 5 epochスクリーニングを実行する
-- [ ] 20 epoch標準実験を実行する
-- [ ] E1とvalidation loss、生成画像、計算量を比較する
-- [ ] 採用または不採用を判断する
+- [x] `main`から`feature/resblock-film-attention-8x8`を作成
+- [x] E1のResidual Block + FiLMを維持する
+- [x] 8×8・256チャンネルにSelf-Attentionを追加する
+- [x] 4×4 Transformerを維持する
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] パラメータ数を記録する
+- [x] 変更をcommitする
+- [x] 5 epochスクリーニングを実行する
+- [x] 20 epoch標準実験を実行する
+- [x] E1とvalidation loss、生成画像、計算量を比較する
+- [x] 採用または不採用を判断する
 
 結果:
 
 ```text
-Run:
-Train loss:
-Validation loss:
-生成画像:
-パラメータ数:
-学習時間:
-所見:
-採用判断:
+Run: `022ecf42c8a3403096322c69ba96328c`, `22f51d8fc6624b668f2cb0e7cecc50cd`, `85d6d6c0f3a44aa896971d8837463ce4` / FINISHED
+Train loss: seed 42 = 0.1897、seed 123 = 0.1903、seed 456 = 0.1908（20 epoch）
+Validation loss: seed 42 = 0.1901、seed 123 = 0.1919、seed 456 = 0.1917（20 epoch）
+生成画像: 全Runで`generated.png`、loss曲線、checkpointをartifact登録済み
+パラメータ数: 16,168,457
+学習時間: 349.509〜548.629秒
+所見: seed 42ではE1を改善したが、seed 123/456ではE1を改善しなかった。改善が安定せず、パラメータ数と計算時間も増加。
+採用判断: 20 epochでは不採用とした。100 epochでE1と再比較するまで最終判断を保留する。
 ```
 
 ## 採用判断の基準
