@@ -1,5 +1,6 @@
 import itertools
 import math
+import os
 import random
 import time
 
@@ -310,7 +311,7 @@ def sample(model, num_samples=16, num_steps=50, device=device, generator=None):
 
 if __name__ == "__main__":
     batch_size = 128
-    num_epochs = 20
+    num_epochs = int(os.environ.get("NUM_EPOCHS", "20"))
     learning_rate = 2e-4
     seed = 42
     run_name = "baseline"
