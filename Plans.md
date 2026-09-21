@@ -160,8 +160,8 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] E5 `deeper-unet`を20 epochで再実行する
 - [x] 各候補をbaselineとE1に比較する
 - [x] 5 epoch時点の判断が妥当だったか候補ごとに記録する
-- [-] 20 epochで改善した候補を追加seedで検証する
-- [-] 改善が再現した候補だけ採用判断を更新する
+- [x] 20 epochで改善した候補を追加seedで検証する
+- [x] 改善が再現した候補だけ採用判断を更新する
 
 ## 実験カード
 
@@ -242,7 +242,7 @@ baseline Run IDs: 988df7ecbf3c4ef0a0f8b874b0e2d2, 6d0fb40829474499b852d51f124c2f
 - [x] 変更をcommitする
 - [x] Phase 1の短縮実験を実行する
 - [x] 生成画像のアーティファクトを確認する
-- [-] Phase 2へ進めるか判断する（20 epochで改善、追加seed検証待ち）
+- [x] Phase 2へ進めるか判断する（20 epochで改善、追加seed検証済み）
 
 結果:
 
@@ -254,7 +254,14 @@ Validation loss: 0.2614 → 0.1926（20 epoch）
 パラメータ数: 10,227,715
 学習時間: 287.451秒
 所見: baseline（seed 42: validation 0.1931）より約0.3%改善。5 epochでは0.2131で悪化していたため、早期スクリーニングによる棄却は不適切だった。
-採用判断: 20 epochではbaseline（seed 42: 0.1931）を約0.3%上回った。5 epochだけで棄却する判断は誤りだった。改善幅が小さいため追加seed検証へ進める。
+追加seed結果:
+```text
+seed 42: 0.1926 / baseline 0.1931
+seed 123: 0.1927 / baseline 0.1929
+seed 456: 0.1930 / baseline 0.1926
+Run IDs: e5b26f83fd5c4537a7a9ada15da7759b, 7a891860946643df99aa27bfd9355df9, 585cc39b900d4e5e86903e435b621ea8
+```
+採用判断: seed 456で悪化し改善が安定しないため不採用。5 epochだけで棄却する判断は不適切だったが、追加seedで採用には至らなかった。
 ```
 
 ### E3: Transformerなし
@@ -292,7 +299,7 @@ Validation loss: 0.2632 → 0.1925（20 epoch）
 - [x] 変更をcommitする
 - [x] Phase 1の短縮実験を実行する
 - [x] baselineおよびE3と比較する
-- [-] Phase 2へ進めるか判断する（5 epochでは不採用、20 epoch再検証待ち）
+- [x] Phase 2へ進めるか判断する（20 epochで改善、追加seed検証済み）
 
 結果:
 
@@ -304,7 +311,14 @@ Validation loss: 0.2676 → 0.1919（20 epoch）
  パラメータ数: 11,033,859
 学習時間: 286.066秒
 所見: baseline（seed 42: validation 0.1931）より約0.65%改善。5 epochでは0.2126で同等以下だったため、早期スクリーニングによる棄却は不適切だった。
-採用判断: 20 epochではbaseline（seed 42: 0.1931）を約0.65%上回った。5 epochだけで棄却する判断は誤りだった。追加seed検証へ進める。
+追加seed結果:
+```text
+seed 42: 0.1919 / baseline 0.1931
+seed 123: 0.1915 / baseline 0.1929
+seed 456: 0.1916 / baseline 0.1926
+Run IDs: b34c59f2244c45a68c5760ee73b14d24, 4e8b2caafdcb4cfcb07e87a9dfa4b306, 3bcf897ee0c941dcab523ee9d4b31895
+```
+採用判断: 3 seedで改善を再現。ただし採用済みE1よりvalidation lossが高く、追加Attentionの計算量もあるためmainには採用しない。5 epochだけで棄却する判断は不適切だった。
 ```
 
 ### E5: deeper U-Net
