@@ -32,3 +32,9 @@ images/*.jpeg
 
 # Notebook checkpoints
 .ipynb_checkpoints/
+
+# MLflow local tracking data
+mlflow/
+mlruns/
+mlflow.db
+mlflow.db-*
