@@ -120,7 +120,7 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] 短縮条件を決めて記録する（5 epoch、seed 42、他条件は標準条件）
 - [x] baselineを短縮条件で実行する
 - [x] `resblock-film`を実行する
-- [ ] `no-bottleneck-attention`を実行する
+- [x] `no-bottleneck-attention`を実行する
 - [ ] `upsample-conv`を実行する
 - [ ] `attention-8x8`を実行する
 - [ ] `deeper-unet`を実行する
@@ -234,25 +234,26 @@ Validation loss: 0.2614 → 0.2131（5 epoch）
 
 ### E3: Transformerなし
 
-- [ ] `main`から`feature/no-bottleneck-attention`を作成
-- [ ] 4×4 Transformerだけを削除する
-- [ ] それ以外の構造を維持する
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] 変更をcommitする
-- [ ] Phase 1の短縮実験を実行する
-- [ ] baselineと比較する
-- [ ] Attentionが有効か判断する
+- [x] `main`から`feature/no-bottleneck-attention`を作成
+- [x] 4×4 Transformerだけを削除する
+- [x] それ以外の構造を維持する
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] 変更をcommitする
+- [x] Phase 1の短縮実験を実行する
+- [x] baselineと比較する
+- [x] Attentionが有効か判断する
 
 結果:
 
 ```text
-Run:
-Train loss:
-Validation loss:
-生成画像:
-所見:
-採用判断:
+Run: 最新MLflow Run / `no-bottleneck-attention` / FINISHED
+Train loss: 0.3666 → 0.2150（5 epoch）
+Validation loss: 0.2620 → 0.2110（5 epoch）
+生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
+パラメータ数: 7,067,139
+所見: baseline（validation 0.2125）より約0.7%改善。E1より軽量。
+採用判断: Phase 2の20 epoch比較へ進める
 ```
 
 ### E4: 8×8 Attention
