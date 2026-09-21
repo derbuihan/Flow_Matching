@@ -240,19 +240,20 @@ Validation loss: 0.2614 → 0.2131（5 epoch）
 - [x] 構文チェックを実行する
 - [x] 小さなforwardを実行する
 - [x] 変更をcommitする
-- [-] Phase 1の短縮実験を実行する
-- [ ] baselineと比較する
-- [ ] Attentionが有効か判断する
+- [x] Phase 1の短縮実験を実行する
+- [x] baselineと比較する
+- [x] Attentionが有効か判断する
 
 結果:
 
 ```text
-Run:
-Train loss:
-Validation loss:
-生成画像:
-所見:
-採用判断:
+Run: 最新MLflow Run / `no-bottleneck-attention` / FINISHED
+Train loss: 0.3666 → 0.2150（5 epoch）
+Validation loss: 0.2620 → 0.2110（5 epoch）
+生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
+パラメータ数: 7,067,139
+所見: baseline（validation 0.2125）より約0.7%改善。E1より軽量。
+採用判断: Phase 2の20 epoch比較へ進める
 ```
 
 ### E4: 8×8 Attention
