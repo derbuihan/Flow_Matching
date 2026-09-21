@@ -121,13 +121,13 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] baselineを短縮条件で実行する
 - [x] `resblock-film`を実行する
 - [x] `no-bottleneck-attention`を実行する
-- [ ] `upsample-conv`を実行する
+- [x] `upsample-conv`を実行する
 - [x] `attention-8x8`を実行する
 - [x] `deeper-unet`を実行する
-- [ ] 各Runのloss曲線を比較する
-- [ ] 各Runの生成画像を比較する
-- [ ] 各Runの計算時間とGPUメモリを比較する
-- [ ] 有望な候補を最大3つに絞る
+- [x] 各Runのloss曲線を比較する
+- [x] 各Runの生成画像を比較する
+- [x] 各Runの計算時間とGPUメモリを比較する
+- [x] 有望な候補を最大3つに絞る（E1、E3、baseline）
 
 ### Phase 2: 標準条件での比較
 
@@ -284,26 +284,26 @@ Validation loss: 0.2676 → 0.2126（5 epoch）
 ### E5: deeper U-Net
 
 - [x] `main`から`feature/deeper-unet`を作成
-- [x] 各解像度のResidual Block数を増やす
+- [x] 各解像度の畳み込みブロック数を増やす（baselineはResidual Block未使用）
 - [ ] FiLMを同時に追加する場合は別実験として分離する
 - [x] 構文チェックを実行する
 - [x] 小さなforwardを実行する
 - [x] 変更をcommitする
-- [-] Phase 1の短縮実験を実行する
+- [x] Phase 1の短縮実験を実行する
 - [ ] 計算時間とGPUメモリを確認する
 - [ ] Phase 2へ進めるか判断する
 
 結果:
 
 ```text
-Run:
-Train loss:
-Validation loss:
-生成画像:
-パラメータ数:
-学習時間:
-所見:
-採用判断:
+Run: `bad7efa745374022a32538c7de452a1e` / FINISHED
+Train loss: 0.3984 → 0.2214（5 epoch）
+Validation loss: 0.2856 → 0.2207（5 epoch）
+生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
+パラメータ数: 13,329,667
+学習時間: 136.05秒
+所見: baseline（validation 0.2125）より約3.9%悪化。学習も遅く、改善なし。
+採用判断: 不採用。標準20 epochには進めない。
 ```
 
 ## 採用判断の基準
