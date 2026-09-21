@@ -169,6 +169,17 @@ class UNet(nn.Module):
         )
         self.pos_embedding = nn.Parameter(torch.zeros(1, 16, 512))
         nn.init.normal_(self.pos_embedding, std=0.02)
+        self.transformer_8x8 = nn.TransformerEncoderLayer(
+            d_model=256,
+            nhead=8,
+            dim_feedforward=1024,
+            dropout=0.0,
+            activation="gelu",
+            batch_first=True,
+            norm_first=True,
+        )
+        self.pos_embedding_8x8 = nn.Parameter(torch.zeros(1, 64, 256))
+        nn.init.normal_(self.pos_embedding_8x8, std=0.02)
 
         self.up3 = up_block(512, 256)
         self.decoder3 = conv_block(256 + 256, 256)
@@ -190,6 +201,11 @@ class UNet(nn.Module):
 
         x2 = self.encoder3(self.down2(x1))  # (B, 256, 8, 8)
         x2 = x2 + self.time_proj_256(temb)[:, :, None, None]
+
+        batch_size, channels, height, width = x2.shape
+        x2_tokens = x2.flatten(2).transpose(1, 2)
+        x2_tokens = self.transformer_8x8(x2_tokens + self.pos_embedding_8x8)
+        x2 = x2_tokens.transpose(1, 2).reshape(batch_size, channels, height, width)
 
         x3 = self.down3(x2)  # (B, 512, 4, 4)
         x3 = x3 + self.time_proj_512(temb)[:, :, None, None]
@@ -314,7 +330,7 @@ if __name__ == "__main__":
     num_epochs = int(os.environ.get("NUM_EPOCHS", "20"))
     learning_rate = 2e-4
     seed = 42
-    run_name = "baseline"
+    run_name = "attention-8x8"
 
     set_seed(seed)
     mlflow.set_experiment("CIFAR10-UNet")
@@ -324,7 +340,7 @@ if __name__ == "__main__":
 
         mlflow.log_params(
             {
-                "model": "UNet-baseline",
+                "model": "UNet-attention-8x8",
                 "batch_size": batch_size,
                 "num_epochs": num_epochs,
                 "learning_rate": learning_rate,
