@@ -119,7 +119,7 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 
 - [x] 短縮条件を決めて記録する（5 epoch、seed 42、他条件は標準条件）
 - [x] baselineを短縮条件で実行する
-- [ ] `resblock-film`を実行する
+- [x] `resblock-film`を実行する
 - [ ] `no-bottleneck-attention`を実行する
 - [ ] `upsample-conv`を実行する
 - [ ] `attention-8x8`を実行する
@@ -182,15 +182,15 @@ Validation loss: 0.2614 → 0.2125
 
 ### E1: Residual Block + FiLM
 
-- [-] `main`から`feature/resblock-film`を作成
-- [ ] 畳み込みブロックをResidual Blockへ変更
-- [ ] 時刻埋め込みをFiLMのscale/shiftとして注入
-- [ ] チャンネル数、データ、損失、samplerは変更しない
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] パラメータ数を記録する
-- [ ] 変更をcommitする
-- [ ] Phase 1の短縮実験を実行する
+- [x] `main`から`feature/resblock-film`を作成
+- [x] 畳み込みブロックをResidual Blockへ変更
+- [x] 時刻埋め込みをFiLMのscale/shiftとして注入
+- [x] チャンネル数、データ、損失、samplerは変更しない
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] パラメータ数を記録する
+- [x] 変更をcommitする
+- [x] Phase 1の短縮実験を実行する
 - [ ] Phase 2の標準実験を実行する
 - [ ] baselineと比較する
 - [ ] 採用または不採用を判断する
@@ -198,14 +198,14 @@ Validation loss: 0.2614 → 0.2125
 結果:
 
 ```text
-Run:
-Train loss:
-Validation loss:
-生成画像:
-パラメータ数:
-学習時間:
-所見:
-採用判断:
+Run: `e0ed6eac04c6470b957c3761bb569362` / FINISHED
+Train loss: 0.3252 → 0.2088（5 epoch）
+Validation loss: 0.2470 → 0.2060（5 epoch）
+生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
+パラメータ数: 15,362,313
+学習時間: 124.186秒（5 epoch）
+所見: baseline（validation 0.2125）より5 epoch終了時validation lossが約3.1%低い。有望候補。
+採用判断: Phase 2の20 epoch比較へ進める
 ```
 
 ### E2: Upsample + Conv
