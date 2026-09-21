@@ -1,5 +1,6 @@
 import itertools
 import math
+import random
 
 import matplotlib.pyplot as plt
 import mlflow
@@ -13,6 +14,13 @@ torch.set_float32_matmul_precision("high")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"device: {device}")
+
+
+def set_seed(seed):
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def get_cifar10_loader(data_dir="data", batch_size=128, num_workers=4):
@@ -101,11 +109,10 @@ class UNet(nn.Module):
             )
 
         self.time_embedding = SinusoidalTimeEmbedding(128)
-        # Each layer produces FiLM scale (gamma) and shift (beta).
-        self.time_film_64 = nn.Linear(128, 64 * 2)
-        self.time_film_128 = nn.Linear(128, 128 * 2)
-        self.time_film_256 = nn.Linear(128, 256 * 2)
-        self.time_film_512 = nn.Linear(128, 512 * 2)
+        self.time_proj_64 = nn.Linear(128, 64)
+        self.time_proj_128 = nn.Linear(128, 128)
+        self.time_proj_256 = nn.Linear(128, 256)
+        self.time_proj_512 = nn.Linear(128, 512)
 
         self.encoder1 = conv_block(in_channels, 64)
         self.down1 = down_block(64, 128)
@@ -139,20 +146,16 @@ class UNet(nn.Module):
         temb = self.time_embedding(t)
 
         x0 = self.encoder1(x)  # (B, 64, 32, 32)
-        gamma, beta = self.time_film_64(temb).chunk(2, dim=1)
-        x0 = x0 * (1 + gamma[:, :, None, None]) + beta[:, :, None, None]
+        x0 = x0 + self.time_proj_64(temb)[:, :, None, None]
 
         x1 = self.encoder2(self.down1(x0))  # (B, 128, 16, 16)
-        gamma, beta = self.time_film_128(temb).chunk(2, dim=1)
-        x1 = x1 * (1 + gamma[:, :, None, None]) + beta[:, :, None, None]
+        x1 = x1 + self.time_proj_128(temb)[:, :, None, None]
 
         x2 = self.encoder3(self.down2(x1))  # (B, 256, 8, 8)
-        gamma, beta = self.time_film_256(temb).chunk(2, dim=1)
-        x2 = x2 * (1 + gamma[:, :, None, None]) + beta[:, :, None, None]
+        x2 = x2 + self.time_proj_256(temb)[:, :, None, None]
 
         x3 = self.down3(x2)  # (B, 512, 4, 4)
-        gamma, beta = self.time_film_512(temb).chunk(2, dim=1)
-        x3 = x3 * (1 + gamma[:, :, None, None]) + beta[:, :, None, None]
+        x3 = x3 + self.time_proj_512(temb)[:, :, None, None]
 
         batch_size, channels, height, width = x3.shape
         x3 = x3.flatten(2).transpose(1, 2)
@@ -239,8 +242,10 @@ if __name__ == "__main__":
     batch_size = 128
     num_epochs = 20
     learning_rate = 2e-4
-    run_name = "film"
+    seed = 42
+    run_name = "baseline"
 
+    set_seed(seed)
     mlflow.set_experiment("CIFAR10-UNet")
     with mlflow.start_run(run_name=run_name):
         model = UNet().to(device)
@@ -248,10 +253,11 @@ if __name__ == "__main__":
 
         mlflow.log_params(
             {
-                "model": "UNet-FiLM",
+                "model": "UNet-baseline",
                 "batch_size": batch_size,
                 "num_epochs": num_epochs,
                 "learning_rate": learning_rate,
+                "seed": seed,
                 "sampler": "Heun",
                 "sampling_steps": 50,
                 "parameters": sum(
