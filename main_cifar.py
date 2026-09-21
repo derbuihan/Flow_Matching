@@ -1,3 +1,4 @@
+import itertools
 import math
 
 import matplotlib.pyplot as plt
@@ -7,13 +8,19 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from torchvision.utils import make_grid
 
+torch.set_float32_matmul_precision("high")
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"device: {device}")
 
 
 def get_cifar10_loader(data_dir="data", batch_size=128, num_workers=4):
     transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        [
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        ]
     )
 
     dataset = datasets.CIFAR10(root=data_dir, download=True, transform=transform)
@@ -47,7 +54,7 @@ class SinusoidalTimeEmbedding(nn.Module):
     def forward(self, t):
         half_dim = self.dim // 2
         freqs = torch.exp(
-            -math.log(10000) * torch.arange(half_dim, device=device) / half_dim
+            -math.log(10000) * torch.arange(half_dim, device=t.device) / half_dim
         )
         args = t * freqs[None, :]
         return torch.cat([torch.sin(args), torch.cos(args)], dim=-1)
@@ -159,25 +166,32 @@ class UNet(nn.Module):
         return self.output(x)  # (B, 3, 32, 32)
 
 
-def train_model(model, batch_size, num_epochs, device):
+def train_model(
+    model,
+    batch_size,
+    num_epochs,
+    device,
+    lr=2e-4,
+):
     loader = get_cifar10_loader(batch_size=batch_size)
-    optimizer = optim.Adam(model.parameters())
+    optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=0.0)
 
     for epoch in range(1, num_epochs + 1):
         total_loss = 0.0
         num_samples = 0
         for images, _ in loader:
-            images = images.to(device)
+            images = images.to(device, non_blocking=True)
             t = torch.rand(images.shape[0], 1, 1, 1, device=device)
             x_0 = torch.randn_like(images)
 
             x_t = (1 - t) * x_0 + t * images
             target_velocity = images - x_0
-            pred_velocity = model(x_t, t)
 
-            loss = ((pred_velocity - target_velocity) ** 2).mean()
+            with torch.autocast("cuda", dtype=torch.bfloat16):
+                pred_velocity = model(x_t, t)
+                loss = ((pred_velocity.float() - target_velocity) ** 2).mean()
 
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()
 
@@ -188,32 +202,35 @@ def train_model(model, batch_size, num_epochs, device):
         print(f"epoch {epoch:>4}/{num_epochs} | loss {avg_loss:.4f}")
 
     torch.save(model.state_dict(), f"models/unet_model_{num_epochs}.pt")
+    return model
+
+
+@torch.no_grad()
+def sample(model, num_samples=16, num_steps=50, device=device):
+    """Integrate the velocity field from t=0 to t=1 with Heun's method.
+
+    Heun is 2nd order and costs two model calls per step, so `num_steps=50`
+    uses the same number of function evaluations as 100 Euler steps.
+    """
+    model.eval()
+    x_t = torch.randn(num_samples, 3, 32, 32, device=device)
+    time_grid = torch.linspace(0.0, 1.0, num_steps + 1, device=device)
+
+    for t, t_next in itertools.pairwise(time_grid):
+        delta_t = t_next - t
+        v_t = model(x_t, t.expand(num_samples, 1, 1, 1))
+        x_euler = x_t + v_t * delta_t
+        v_next = model(x_euler, t_next.expand(num_samples, 1, 1, 1))
+        x_t = x_t + delta_t * 0.5 * (v_t + v_next)
+
+    return x_t
 
 
 if __name__ == "__main__":
     batch_size = 128
     num_epochs = 20
     model = UNet().to(device)
-    train_model(model, batch_size, num_epochs, device)
+    model = torch.compile(model)
+    model = train_model(model, batch_size, num_epochs, device)
 
-    # model.load_state_dict(torch.load("models/unet_model_10.pt", map_location=device))
-    model.eval()
-
-    x_t = torch.randn(16, 3, 32, 32, device=device)
-    num_steps = 100
-    gamma = 2.0
-    s = torch.linspace(0.0, 1.0, num_steps + 1, device=device)
-    time_grid = torch.sin(math.pi * s / 2)
-    with torch.no_grad():
-        for t, t_next in zip(time_grid[:-1], time_grid[1:]):
-            t_batch = t.expand(16, 1, 1, 1)
-            v_t = model(x_t, t_batch)
-            delta_t = t_next - t
-            x_t = x_t + v_t * delta_t
-
-    plot_images(x_t, path="images/generated.png")
-
-    # loader = get_cifar10_loader(batch_size=16)
-    # for images, _ in loader:
-    #     plot_images(images, path="images/target.png")
-    #     break
+    plot_images(sample(model), path="images/generated.png")
