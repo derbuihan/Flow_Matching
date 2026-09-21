@@ -1,5 +1,6 @@
 import itertools
 import math
+import os
 import random
 import time
 
@@ -7,6 +8,7 @@ import matplotlib.pyplot as plt
 import mlflow
 import torch
 from torch import nn, optim
+from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from torchvision.utils import make_grid
@@ -105,21 +107,34 @@ class SinusoidalTimeEmbedding(nn.Module):
         return torch.cat([torch.sin(args), torch.cos(args)], dim=-1)
 
 
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, time_dim=128):
+        super().__init__()
+        self.norm1 = nn.GroupNorm(math.gcd(8, in_channels), in_channels)
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+        self.norm2 = nn.GroupNorm(8, out_channels)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+        self.time_film = nn.Linear(time_dim, out_channels * 2)
+        self.skip = (
+            nn.Identity()
+            if in_channels == out_channels
+            else nn.Conv2d(in_channels, out_channels, kernel_size=1)
+        )
+
+    def forward(self, x, temb):
+        h = self.conv1(F.silu(self.norm1(x)))
+        scale, shift = self.time_film(temb).chunk(2, dim=1)
+        h = self.norm2(h)
+        h = h * (1 + scale[:, :, None, None]) + shift[:, :, None, None]
+        h = self.conv2(F.silu(h))
+        return h + self.skip(x)
+
+
 class UNet(nn.Module):
     """Small U-Net for 32x32 CIFAR images."""
 
     def __init__(self, in_channels=3, out_channels=3):
         super().__init__()
-
-        def conv_block(in_channels, out_channels):
-            return nn.Sequential(
-                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding="same"),
-                nn.GroupNorm(8, out_channels),
-                nn.SiLU(),
-                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding="same"),
-                nn.GroupNorm(8, out_channels),
-                nn.SiLU(),
-            )
 
         def down_block(in_channels, out_channels):
             return nn.Sequential(
@@ -145,17 +160,13 @@ class UNet(nn.Module):
             )
 
         self.time_embedding = SinusoidalTimeEmbedding(128)
-        self.time_proj_64 = nn.Linear(128, 64)
-        self.time_proj_128 = nn.Linear(128, 128)
-        self.time_proj_256 = nn.Linear(128, 256)
-        self.time_proj_512 = nn.Linear(128, 512)
-
-        self.encoder1 = conv_block(in_channels, 64)
+        self.encoder1 = ResidualBlock(in_channels, 64)
         self.down1 = down_block(64, 128)
-        self.encoder2 = conv_block(128, 128)
+        self.encoder2 = ResidualBlock(128, 128)
         self.down2 = down_block(128, 256)
-        self.encoder3 = conv_block(256, 256)
+        self.encoder3 = ResidualBlock(256, 256)
         self.down3 = down_block(256, 512)
+        self.bottleneck = ResidualBlock(512, 512)
 
         self.transformer = nn.TransformerEncoderLayer(
             d_model=512,
@@ -170,28 +181,24 @@ class UNet(nn.Module):
         nn.init.normal_(self.pos_embedding, std=0.02)
 
         self.up3 = up_block(512, 256)
-        self.decoder3 = conv_block(256 + 256, 256)
+        self.decoder3 = ResidualBlock(256 + 256, 256)
         self.up2 = up_block(256, 128)
-        self.decoder2 = conv_block(128 + 128, 128)
+        self.decoder2 = ResidualBlock(128 + 128, 128)
         self.up1 = up_block(128, 64)
-        self.decoder1 = conv_block(64 + 64, 64)
+        self.decoder1 = ResidualBlock(64 + 64, 64)
         self.output = nn.Conv2d(64, out_channels, 3, padding=1)
 
     def forward(self, x, t):
         t = t.view(t.shape[0], 1)
         temb = self.time_embedding(t)
 
-        x0 = self.encoder1(x)  # (B, 64, 32, 32)
-        x0 = x0 + self.time_proj_64(temb)[:, :, None, None]
+        x0 = self.encoder1(x, temb)  # (B, 64, 32, 32)
 
-        x1 = self.encoder2(self.down1(x0))  # (B, 128, 16, 16)
-        x1 = x1 + self.time_proj_128(temb)[:, :, None, None]
+        x1 = self.encoder2(self.down1(x0), temb)  # (B, 128, 16, 16)
 
-        x2 = self.encoder3(self.down2(x1))  # (B, 256, 8, 8)
-        x2 = x2 + self.time_proj_256(temb)[:, :, None, None]
+        x2 = self.encoder3(self.down2(x1), temb)  # (B, 256, 8, 8)
 
-        x3 = self.down3(x2)  # (B, 512, 4, 4)
-        x3 = x3 + self.time_proj_512(temb)[:, :, None, None]
+        x3 = self.bottleneck(self.down3(x2), temb)  # (B, 512, 4, 4)
 
         batch_size, channels, height, width = x3.shape
         x3 = x3.flatten(2).transpose(1, 2)
@@ -200,13 +207,13 @@ class UNet(nn.Module):
         x3 = x3.transpose(1, 2).reshape(batch_size, channels, height, width)
 
         x = self.up3(x3)  # (B, 256, 8, 8)
-        x = self.decoder3(torch.cat((x, x2), dim=1))  # (B, 256, 8, 8)
+        x = self.decoder3(torch.cat((x, x2), dim=1), temb)  # (B, 256, 8, 8)
 
         x = self.up2(x)  # (B, 128, 16, 16)
-        x = self.decoder2(torch.cat((x, x1), dim=1))  # (B, 128, 16, 16)
+        x = self.decoder2(torch.cat((x, x1), dim=1), temb)  # (B, 128, 16, 16)
 
         x = self.up1(x)  # (B, 64, 32, 32)
-        x = self.decoder1(torch.cat((x, x0), dim=1))  # (B, 64, 32, 32)
+        x = self.decoder1(torch.cat((x, x0), dim=1), temb)  # (B, 64, 32, 32)
 
         return self.output(x)  # (B, 3, 32, 32)
 
@@ -310,10 +317,10 @@ def sample(model, num_samples=16, num_steps=50, device=device, generator=None):
 
 if __name__ == "__main__":
     batch_size = 128
-    num_epochs = 20
+    num_epochs = int(os.environ.get("NUM_EPOCHS", "20"))
     learning_rate = 2e-4
     seed = 42
-    run_name = "baseline"
+    run_name = "resblock-film"
 
     set_seed(seed)
     mlflow.set_experiment("CIFAR10-UNet")
@@ -323,7 +330,7 @@ if __name__ == "__main__":
 
         mlflow.log_params(
             {
-                "model": "UNet-baseline",
+                "model": "UNet-resblock-film",
                 "batch_size": batch_size,
                 "num_epochs": num_epochs,
                 "learning_rate": learning_rate,

@@ -117,8 +117,8 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 
 各候補を同じ短縮条件で比較し、明らかに劣る候補を除外する。
 
-- [ ] 短縮条件を決めて記録する（例: 5 epoch）
-- [ ] baselineを短縮条件で実行する
+- [-] 短縮条件を決めて記録する（5 epoch、seed 42、他条件は標準条件）
+- [x] baselineを短縮条件で実行する
 - [ ] `resblock-film`を実行する
 - [ ] `no-bottleneck-attention`を実行する
 - [ ] `upsample-conv`を実行する
@@ -174,15 +174,15 @@ checkpoint: `unet_model_20.pt`
 
 ### E1: Residual Block + FiLM
 
-- [-] `main`から`feature/resblock-film`を作成
-- [ ] 畳み込みブロックをResidual Blockへ変更
-- [ ] 時刻埋め込みをFiLMのscale/shiftとして注入
+- [x] `main`から`feature/resblock-film`を作成
+- [x] 畳み込みブロックをResidual Blockへ変更
+- [x] 時刻埋め込みをFiLMのscale/shiftとして注入
 - [ ] チャンネル数、データ、損失、samplerは変更しない
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] パラメータ数を記録する
-- [ ] 変更をcommitする
-- [ ] Phase 1の短縮実験を実行する
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] パラメータ数を記録する（15,362,313）
+- [x] 変更をcommitする
+- [-] Phase 1の短縮実験を実行する
 - [ ] Phase 2の標準実験を実行する
 - [ ] baselineと比較する
 - [ ] 採用または不採用を判断する
