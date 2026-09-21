@@ -151,6 +151,18 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] 改善が安定していれば`main`へマージする
 - [x] 改善が不安定なら採用せず、結果を記録する（該当なし）
 
+### Phase 4: 5 epoch棄却仮説の再検証
+
+5 epochの短縮結果だけでは、収束の遅いモデルを誤って棄却する可能性がある。そのため、前回5 epochで棄却または保留した候補を20 epochで再実行し、最終validation lossと計算コストで再判定する。
+
+- [ ] E2 `upsample-conv`を20 epochで再実行する
+- [ ] E4 `attention-8x8`を20 epochで再実行する
+- [ ] E5 `deeper-unet`を20 epochで再実行する
+- [ ] 各候補をbaselineとE1に比較する
+- [ ] 5 epoch時点の判断が妥当だったか候補ごとに記録する
+- [ ] 20 epochで改善した候補を追加seedで検証する
+- [ ] 改善が再現した候補だけ採用判断を更新する
+
 ## 実験カード
 
 ### E0: baseline
@@ -230,7 +242,7 @@ baseline Run IDs: 988df7ecbf3c4ef0a0f8b874b0e2d2, 6d0fb40829474499b852d51f124c2f
 - [x] 変更をcommitする
 - [x] Phase 1の短縮実験を実行する
 - [x] 生成画像のアーティファクトを確認する
-- [x] Phase 2へ進めるか判断する（不採用）
+- [-] Phase 2へ進めるか判断する（5 epochでは不採用、20 epoch再検証待ち）
 
 結果:
 
@@ -240,7 +252,7 @@ Train loss: 0.3561 → 0.2156（5 epoch）
 Validation loss: 0.2614 → 0.2131（5 epoch）
 生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
 所見: baseline（validation 0.2125）より0.3%悪化。明確な改善なし。
-採用判断: 不採用。標準20 epochには進めない。
+採用判断: 5 epochでは不採用としたが、早期収束仮説の妥当性確認のため20 epoch再検証へ進める。
 ```
 
 ### E3: Transformerなし
@@ -278,7 +290,7 @@ Validation loss: 0.2632 → 0.1925（20 epoch）
 - [x] 変更をcommitする
 - [x] Phase 1の短縮実験を実行する
 - [x] baselineおよびE3と比較する
-- [x] Phase 2へ進めるか判断する（軽量候補として保留）
+- [-] Phase 2へ進めるか判断する（5 epochでは不採用、20 epoch再検証待ち）
 
 結果:
 
@@ -289,7 +301,7 @@ Validation loss: 0.2676 → 0.2126（5 epoch）
 生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
 パラメータ数: 11,033,859
 所見: baseline（validation 0.2125）と同等以下で、追加計算量に見合う改善なし。
-採用判断: 不採用。標準20 epochには進めない。
+採用判断: 5 epochでは不採用としたが、早期収束仮説の妥当性確認のため20 epoch再検証へ進める。
 ```
 
 ### E5: deeper U-Net
@@ -302,7 +314,7 @@ Validation loss: 0.2676 → 0.2126（5 epoch）
 - [x] 変更をcommitする
 - [x] Phase 1の短縮実験を実行する
 - [x] 計算時間とGPUメモリを確認する
-- [x] Phase 2へ進めるか判断する（不採用）
+- [-] Phase 2へ進めるか判断する（5 epochでは不採用、20 epoch再検証待ち）
 
 結果:
 
