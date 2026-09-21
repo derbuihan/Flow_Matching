@@ -230,9 +230,6 @@ Validation loss: 0.2614 → 0.2125
 - [x] Phase 1の短縮実験を実行する
 - [x] Phase 2の標準実験を実行する
 - [x] baselineと比較する
-- [x] 20 epoch時点の採用判断を保留し、100 epoch再検証へ進める
-- [x] 100 epochでE1と同一seed・同一条件で比較する
-- [x] 100 epochのvalidation loss、loss曲線、生成画像、checkpoint、学習時間を確認する
 - [x] 採用または不採用を判断する
 
 結果:
@@ -387,6 +384,9 @@ Validation loss: 0.2856 → 0.1944（20 epoch）
 - [x] 5 epochスクリーニングを実行する
 - [x] 20 epoch標準実験を実行する
 - [x] E1とvalidation loss、生成画像、計算量を比較する
+- [x] 20 epoch時点の採用判断を保留し、100 epoch再検証へ進める
+- [x] 100 epochでE1と同一seed・同一条件で比較する
+- [x] 100 epochのvalidation loss、loss曲線、生成画像、checkpoint、学習時間を確認する
 - [x] 採用または不採用を判断する
 
 結果:
