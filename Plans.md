@@ -29,34 +29,34 @@
   - 出力: `(4, 3, 32, 32)`
   - batch 4のforward: 約1.22 ms（実行時の目安）
 - [x] 現行baselineを標準条件で学習し、比較用Runを完成させる
-- [ ] 最初のモデル改善案を実装する
+- [x] 最初のモデル改善案を実装する
 
 ## 固定する標準実験条件
 
 モデル構造以外は、候補モデル間で変更しない。
 
-- [ ] seedを固定する
+- [x] seedを固定する
   - Python
   - NumPy
   - PyTorch
   - CUDA
   - DataLoader
-- [ ] データセットを固定する
+- [x] データセットを固定する
   - CIFAR-10
   - `ToTensor`
   - `Normalize((0.5,)*3, (0.5,)*3)`
   - `RandomHorizontalFlip`
-- [ ] `batch_size=128`を固定する
-- [ ] `num_epochs=20`を固定する
-- [ ] `learning_rate=2e-4`を固定する
-- [ ] Flow Matchingの補間を固定する
+- [x] `batch_size=128`を固定する
+- [x] `num_epochs=20`を固定する
+- [x] `learning_rate=2e-4`を固定する
+- [x] Flow Matchingの補間を固定する
   - `x_t = (1 - t) * x_0 + t * x_1`
   - `target_velocity = x_1 - x_0`
   - velocity MSE
-- [ ] samplerをHeunに固定する
-- [ ] `sampling_steps=50`を固定する
-- [ ] GPU、精度設定、DataLoader設定を固定する
-- [ ] 実験ごとにGit commitを作成してから長時間学習する
+- [x] samplerをHeunに固定する
+- [x] `sampling_steps=50`を固定する
+- [x] GPU、精度設定、DataLoader設定を固定する
+- [x] 実験ごとにGit commitを作成してから長時間学習する
 
 ## 評価基盤
 
@@ -64,7 +64,7 @@
 
 - [x] MLflow Experimentが`CIFAR10-UNet`になっていることを確認する
 - [x] Run名にfeature名を使う
-- [-] 以下のパラメータをMLflowへ記録する
+- [x] 以下のパラメータをMLflowへ記録する
   - [x] モデル名と変更内容
   - [x] seed
   - [x] batch size、epoch数、learning rate
@@ -121,13 +121,13 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] baselineを短縮条件で実行する
 - [x] `resblock-film`を実行する
 - [x] `no-bottleneck-attention`を実行する
-- [ ] `upsample-conv`を実行する
+- [x] `upsample-conv`を実行する
 - [x] `attention-8x8`を実行する
-- [ ] `deeper-unet`を実行する
-- [ ] 各Runのloss曲線を比較する
-- [ ] 各Runの生成画像を比較する
-- [ ] 各Runの計算時間とGPUメモリを比較する
-- [ ] 有望な候補を最大3つに絞る
+- [x] `deeper-unet`を実行する
+- [x] 各Runのloss曲線を比較する
+- [x] 各Runの生成画像を比較する
+- [x] 各Runの計算時間とGPUメモリを比較する
+- [x] 有望な候補を最大3つに絞る（E1、E3、baseline）
 
 ### Phase 2: 標準条件での比較
 
@@ -193,7 +193,7 @@ Validation loss: 0.2614 → 0.2125
 - [x] Phase 1の短縮実験を実行する
 - [x] Phase 2の標準実験を実行する
 - [x] baselineと比較する
-- [-] 採用または不採用を判断する（seed再検証待ち）
+- [x] 採用または不採用を判断する
 
 結果:
 
@@ -229,8 +229,8 @@ baseline Run IDs: 988df7ecbf3c4ef0a0f8b874b0e2d2, 6d0fb40829474499b852d51f124c2f
 - [x] 小さなforwardを実行する
 - [x] 変更をcommitする
 - [x] Phase 1の短縮実験を実行する
-- [ ] 生成画像のアーティファクトを確認する
-- [ ] Phase 2へ進めるか判断する
+- [x] 生成画像のアーティファクトを確認する
+- [x] Phase 2へ進めるか判断する（不採用）
 
 結果:
 
@@ -277,8 +277,8 @@ Validation loss: 0.2632 → 0.1925（20 epoch）
 - [x] 小さなforwardを実行する
 - [x] 変更をcommitする
 - [x] Phase 1の短縮実験を実行する
-- [ ] baselineおよびE3と比較する
-- [ ] Phase 2へ進めるか判断する
+- [x] baselineおよびE3と比較する
+- [x] Phase 2へ進めるか判断する（軽量候補として保留）
 
 結果:
 
@@ -294,15 +294,15 @@ Validation loss: 0.2676 → 0.2126（5 epoch）
 
 ### E5: deeper U-Net
 
-- [ ] `main`から`feature/deeper-unet`を作成
-- [ ] 各解像度のResidual Block数を増やす
-- [ ] FiLMを同時に追加する場合は別実験として分離する
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] 変更をcommitする
-- [ ] Phase 1の短縮実験を実行する
-- [ ] 計算時間とGPUメモリを確認する
-- [ ] Phase 2へ進めるか判断する
+- [x] `main`から`feature/deeper-unet`を作成
+- [x] 各解像度の畳み込みブロック数を増やす（baselineはResidual Block未使用）
+- [x] FiLMを同時に追加する場合は別実験として分離する
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] 変更をcommitする
+- [x] Phase 1の短縮実験を実行する
+- [x] 計算時間とGPUメモリを確認する
+- [x] Phase 2へ進めるか判断する（不採用）
 
 結果:
 
