@@ -163,6 +163,19 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] 20 epochで改善した候補を追加seedで検証する
 - [x] 改善が再現した候補だけ採用判断を更新する
 
+### Phase 5: 採用済みモデルへの8×8 Attention追加
+
+E1 `resblock-film`を基準に、8×8・256チャンネルのSelf-Attentionを追加する。E4単独ではbaselineに対して改善したため、E1との組み合わせ効果を独立実験として検証する。
+
+- [ ] E6 `resblock-film + attention-8x8`をfeatureブランチで実装する
+- [ ] 構文チェックと小さなforwardを実行する
+- [ ] パラメータ数と計算時間を記録する
+- [ ] 5 epochでbaseline E1とスクリーニング比較する
+- [ ] 20 epochでE1と正式比較する
+- [ ] 生成画像、loss曲線、checkpoint、MLflow Runを確認する
+- [ ] 必要ならseed 123/456で再検証する
+- [ ] E1より改善が安定した場合だけmainへマージする
+
 ## 実験カード
 
 ### E0: baseline
@@ -344,6 +357,34 @@ Validation loss: 0.2856 → 0.1944（20 epoch）
 学習時間: 377.362秒
 所見: baseline（seed 42: 0.1931）より約0.66%悪化。20 epochでも改善せず、5 epochの棄却判断は妥当。
 採用判断: 不採用。追加seed検証は行わない。
+```
+
+### E6: Residual Block + FiLM + 8×8 Attention
+
+- [ ] `main`から`feature/resblock-film-attention-8x8`を作成
+- [ ] E1のResidual Block + FiLMを維持する
+- [ ] 8×8・256チャンネルにSelf-Attentionを追加する
+- [ ] 4×4 Transformerを維持する
+- [ ] 構文チェックを実行する
+- [ ] 小さなforwardを実行する
+- [ ] パラメータ数を記録する
+- [ ] 変更をcommitする
+- [ ] 5 epochスクリーニングを実行する
+- [ ] 20 epoch標準実験を実行する
+- [ ] E1とvalidation loss、生成画像、計算量を比較する
+- [ ] 採用または不採用を判断する
+
+結果:
+
+```text
+Run:
+Train loss:
+Validation loss:
+生成画像:
+パラメータ数:
+学習時間:
+所見:
+採用判断:
 ```
 
 ## 採用判断の基準
