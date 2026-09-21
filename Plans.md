@@ -85,30 +85,32 @@
 ### Phase 0: baselineの確立
 
 - [x] `main`の状態を確認する
-- [ ] baseline用のcommitを特定する（現在の候補: `5d3d55b`、`deef5c3`）
+- [x] baseline用のcommitを特定する（評価基盤込み: `93e760e`）
 - [x] 現行baselineを標準条件で20 epoch学習する
 - [x] baselineのMLflow Runを確認する
 - [x] baselineのtrain loss履歴を確認する
 - [x] baselineの生成画像を確認する
 - [x] baselineのcheckpointを確認する
 - [x] baselineの学習完了状態を確認する
-- [ ] baselineのパラメータ数、学習時間、生成時間を記録する（次回baseline再実行で確定）
+- [x] baselineのパラメータ数、学習時間、生成時間を記録する
 - [x] baselineの評価結果をこのファイルに記録する
 
 Baseline記録:
 
 ```text
 Run名: baseline
-Run ID: 5be835b50aec4d9497c093178a813a81
-Git commit: 未記録
+Run ID: 988df7ecbf3c4ef0a0f8b874b0e2d2
+Git commit: 93e760e
 Seed: 42
-Train loss: epoch 1 = 0.3487130824565887 / epoch 20 = 0.1926929071187973
-Validation loss: 未記録
+Train loss: epoch 1 = 0.3480 / epoch 20 = 0.1931
+Validation loss: epoch 1 = 0.2610 / epoch 20 = 0.1931
 生成画像: `generated.png`（584×584、artifact登録済み）
+loss曲線: `loss_curve.png`（artifact登録済み）
 checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
-学習時間: 未記録
-生成時間: 未記録
-所見: FINISHED。標準条件のパラメータと20 epoch分のtrain_lossを確認済み。validation、曲線、時間計測を追加したためbaseline再実行が必要。
+パラメータ数: 10,227,715
+学習時間: 270.385秒
+生成時間: 1.515秒
+所見: FINISHED。loss、validation loss、曲線、checkpoint、生成画像、時間を確認済み。
 ```
 
 ### Phase 1: 短時間スクリーニング
@@ -172,7 +174,7 @@ checkpoint: `unet_model_20.pt`
 
 ### E1: Residual Block + FiLM
 
-- [ ] `main`から`feature/resblock-film`を作成
+- [-] `main`から`feature/resblock-film`を作成
 - [ ] 畳み込みブロックをResidual Blockへ変更
 - [ ] 時刻埋め込みをFiLMのscale/shiftとして注入
 - [ ] チャンネル数、データ、損失、samplerは変更しない
