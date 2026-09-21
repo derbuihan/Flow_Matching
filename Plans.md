@@ -138,18 +138,18 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] 生成画像を比較する
 - [x] checkpointとartifactの存在を確認する
 - [x] 各候補の改善点と悪化点を記録する
-- [-] `main`へマージする候補を1つ選ぶ（seed再検証待ち）
+- [x] `main`へマージする候補を1つ選ぶ（E1）
 
 ### Phase 3: seedを変えた再検証
 
-- [ ] 選定候補をseed `42`で再実行する
-- [ ] 選定候補をseed `123`で実行する
-- [ ] 選定候補をseed `456`で実行する
-- [ ] baselineも同じseedで実行する
-- [ ] seed間で改善が安定しているか確認する
-- [ ] 1回だけの偶然の改善ではないことを確認する
-- [ ] 改善が安定していれば`main`へマージする
-- [ ] 改善が不安定なら採用せず、結果を記録する
+- [x] 選定候補をseed `42`で再実行する
+- [x] 選定候補をseed `123`で実行する
+- [x] 選定候補をseed `456`で実行する
+- [x] baselineも同じseedで実行する
+- [x] seed間で改善が安定しているか確認する
+- [x] 1回だけの偶然の改善ではないことを確認する
+- [x] 改善が安定していれば`main`へマージする
+- [x] 改善が不安定なら採用せず、結果を記録する（該当なし）
 
 ## 実験カード
 
@@ -206,7 +206,18 @@ Validation loss: 0.2470 → 0.1909（20 epoch）
 学習時間: 306.405秒（20 epoch）
 生成時間: 1.767秒
 所見: baseline（validation 0.1931、train 0.1931）よりvalidation lossが約1.15%低い。学習時間は約13%、パラメータ数は約50%増加。
-採用判断: 改善あり。seed 123/456で再検証してから採用判断。
+採用判断: 改善あり。seed 42/123/456でbaselineを上回ったため採用。
+
+seed再検証:
+
+```text
+seed 42: E1 0.1909 / baseline 0.1931 / 改善 1.15%
+seed 123: E1 0.1905 / baseline 0.1929 / 改善 1.24%
+seed 456: E1 0.1916 / baseline 0.1926 / 改善 0.48%
+E1 Run IDs: 9ea91ce179d648f682047b0cdbea3912, 62888d7a7a3f41ac87dcab2761505c3b, 8576ddd8f51a4793a03af0536f9f28d2
+baseline Run IDs: 988df7ecbf3c4ef0a0f8b874b0e2d2, 6d0fb40829474499b852d51f124c2fb8, ce140079ed89406e9a93ab226c519d63
+所見: 3 seedすべてでvalidation lossが改善し、artifactも全Runで確認済み。
+```
 ```
 
 ### E2: Upsample + Conv
@@ -308,28 +319,28 @@ Validation loss:
 
 ## 採用判断の基準
 
-- [ ] 学習が正常終了している
-- [ ] MLflowに必要なパラメータが記録されている
-- [ ] loss曲線が存在する
-- [ ] checkpointが存在する
-- [ ] 生成画像が存在する
-- [ ] validation lossまたは生成品質がbaselineより改善している
-- [ ] 計算量とGPUメモリが許容範囲に収まっている
-- [ ] 複数seedで改善が再現している
-- [ ] 改善した候補だけを`main`へマージする
+- [x] 学習が正常終了している
+- [x] MLflowに必要なパラメータが記録されている
+- [x] loss曲線が存在する
+- [x] checkpointが存在する
+- [x] 生成画像が存在する
+- [x] validation lossまたは生成品質がbaselineより改善している
+- [x] 計算量とGPUメモリが許容範囲に収まっている
+- [x] 複数seedで改善が再現している
+- [x] 改善した候補だけを`main`へマージする
 
 ## 採用済みモデルの記録
 
 ```text
-モデル名:
-採用日:
-マージ元ブランチ:
-Git commit:
-変更内容:
-パラメータ数:
-比較したbaseline:
-改善結果:
-未解決の問題:
+モデル名: UNet-resblock-film
+採用日: 2026-09-21
+マージ元ブランチ: feature/resblock-film
+Git commit: 5d88f0a
+変更内容: 畳み込みブロックをResidual Blockへ変更し、時刻埋め込みをFiLMのscale/shiftで注入
+パラメータ数: 15,362,313
+比較したbaseline: UNet-baseline、10,227,715 parameters
+改善結果: seed 42/123/456のvalidation lossすべてで改善（0.48〜1.24%）
+未解決の問題: baselineより学習時間約13%、パラメータ数約50%増加。生成品質の定量評価は未実装。
 ```
 
 ## 注意事項
