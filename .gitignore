@@ -36,3 +36,4 @@ images/*.jpeg
 # MLflow local tracking data
 mlflow.db
 mlflow.db-*
+mlruns/
