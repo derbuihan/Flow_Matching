@@ -121,7 +121,7 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] baselineを短縮条件で実行する
 - [x] `resblock-film`を実行する
 - [ ] `no-bottleneck-attention`を実行する
-- [ ] `upsample-conv`を実行する
+- [x] `upsample-conv`を実行する
 - [ ] `attention-8x8`を実行する
 - [ ] `deeper-unet`を実行する
 - [ ] 各Runのloss曲線を比較する
@@ -211,13 +211,13 @@ Validation loss: 0.2470 → 0.1909（20 epoch）
 
 ### E2: Upsample + Conv
 
-- [ ] `main`から`feature/upsample-conv`を作成
-- [ ] `ConvTranspose2d`をUpsample + Conv2dへ変更
-- [ ] U-Netの解像度とskip接続を維持する
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] 変更をcommitする
-- [ ] Phase 1の短縮実験を実行する
+- [x] `main`から`feature/upsample-conv`を作成
+- [x] `ConvTranspose2d`をUpsample + Conv2dへ変更
+- [x] U-Netの解像度とskip接続を維持する
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] 変更をcommitする
+- [-] Phase 1の短縮実験を実行する
 - [ ] 生成画像のアーティファクトを確認する
 - [ ] Phase 2へ進めるか判断する
 

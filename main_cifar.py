@@ -133,14 +133,8 @@ class UNet(nn.Module):
 
         def up_block(in_channels, out_channels):
             return nn.Sequential(
-                nn.ConvTranspose2d(
-                    in_channels,
-                    out_channels,
-                    kernel_size=3,
-                    stride=2,
-                    padding=1,
-                    output_padding=1,
-                ),
+                nn.Upsample(scale_factor=2, mode="nearest"),
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
                 nn.GroupNorm(8, out_channels),
                 nn.SiLU(),
             )
@@ -314,7 +308,7 @@ if __name__ == "__main__":
     num_epochs = int(os.environ.get("NUM_EPOCHS", "20"))
     learning_rate = 2e-4
     seed = 42
-    run_name = "baseline"
+    run_name = "upsample-conv"
 
     set_seed(seed)
     mlflow.set_experiment("CIFAR10-UNet")
@@ -324,7 +318,7 @@ if __name__ == "__main__":
 
         mlflow.log_params(
             {
-                "model": "UNet-baseline",
+                "model": "UNet-upsample-conv",
                 "batch_size": batch_size,
                 "num_epochs": num_epochs,
                 "learning_rate": learning_rate,
