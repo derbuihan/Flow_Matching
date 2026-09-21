@@ -122,7 +122,7 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] `resblock-film`を実行する
 - [x] `no-bottleneck-attention`を実行する
 - [ ] `upsample-conv`を実行する
-- [ ] `attention-8x8`を実行する
+- [x] `attention-8x8`を実行する
 - [ ] `deeper-unet`を実行する
 - [ ] 各Runのloss曲線を比較する
 - [ ] 各Runの生成画像を比較する
@@ -259,26 +259,26 @@ Validation loss: 0.2632 → 0.1925（20 epoch）
 
 ### E4: 8×8 Attention
 
-- [ ] `main`から`feature/attention-8x8`を作成
-- [ ] 8×8・256チャンネルにAttentionを追加する
-- [ ] 4×4 Transformerとの違いを記録する
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] 変更をcommitする
-- [ ] Phase 1の短縮実験を実行する
+- [x] `main`から`feature/attention-8x8`を作成
+- [x] 8×8・256チャンネルにAttentionを追加する
+- [x] 4×4 Transformerとの違いを記録する
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] 変更をcommitする
+- [x] Phase 1の短縮実験を実行する
 - [ ] baselineおよびE3と比較する
 - [ ] Phase 2へ進めるか判断する
 
 結果:
 
 ```text
-Run:
-Train loss:
-Validation loss:
-生成画像:
-パラメータ数:
-所見:
-採用判断:
+Run: 最新MLflow Run / `attention-8x8` / FINISHED
+Train loss: 0.3664 → 0.2159（5 epoch）
+Validation loss: 0.2676 → 0.2126（5 epoch）
+生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
+パラメータ数: 11,033,859
+所見: baseline（validation 0.2125）と同等以下で、追加計算量に見合う改善なし。
+採用判断: 不採用。標準20 epochには進めない。
 ```
 
 ### E5: deeper U-Net
