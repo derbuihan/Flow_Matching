@@ -131,14 +131,14 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 
 ### Phase 2: 標準条件での比較
 
-- [ ] Phase 1で選んだ候補を20 epochで実行する
-- [ ] baselineと同じseedで比較する
-- [ ] train lossを比較する
-- [ ] validation lossを比較する
-- [ ] 生成画像を比較する
-- [ ] checkpointとartifactの存在を確認する
-- [ ] 各候補の改善点と悪化点を記録する
-- [ ] `main`へマージする候補を1つ選ぶ
+- [x] Phase 1で選んだ候補を20 epochで実行する（E1）
+- [x] baselineと同じseedで比較する
+- [x] train lossを比較する
+- [x] validation lossを比較する
+- [x] 生成画像を比較する
+- [x] checkpointとartifactの存在を確認する
+- [x] 各候補の改善点と悪化点を記録する
+- [-] `main`へマージする候補を1つ選ぶ（seed再検証待ち）
 
 ### Phase 3: seedを変えた再検証
 
@@ -198,14 +198,15 @@ Validation loss: 0.2614 → 0.2125
 結果:
 
 ```text
-Run: `e0ed6eac04c6470b957c3761bb569362` / FINISHED
-Train loss: 0.3252 → 0.2088（5 epoch）
-Validation loss: 0.2470 → 0.2060（5 epoch）
+Run: `9ea91ce179d648f682047b0cdbea3912` / FINISHED
+Train loss: 0.3252 → 0.1909（20 epoch）
+Validation loss: 0.2470 → 0.1909（20 epoch）
 生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
 パラメータ数: 15,362,313
-学習時間: 124.186秒（5 epoch）
-所見: baseline（validation 0.2125）より5 epoch終了時validation lossが約3.1%低い。有望候補。
-採用判断: Phase 2の20 epoch比較へ進める
+学習時間: 306.405秒（20 epoch）
+生成時間: 1.767秒
+所見: baseline（validation 0.1931、train 0.1931）よりvalidation lossが約1.15%低い。学習時間は約13%、パラメータ数は約50%増加。
+採用判断: 改善あり。seed 123/456で再検証してから採用判断。
 ```
 
 ### E2: Upsample + Conv
