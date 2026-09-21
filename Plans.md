@@ -155,13 +155,13 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 
 5 epochの短縮結果だけでは、収束の遅いモデルを誤って棄却する可能性がある。そのため、前回5 epochで棄却または保留した候補を20 epochで再実行し、最終validation lossと計算コストで再判定する。
 
-- [ ] E2 `upsample-conv`を20 epochで再実行する
-- [ ] E4 `attention-8x8`を20 epochで再実行する
-- [ ] E5 `deeper-unet`を20 epochで再実行する
-- [ ] 各候補をbaselineとE1に比較する
-- [ ] 5 epoch時点の判断が妥当だったか候補ごとに記録する
-- [ ] 20 epochで改善した候補を追加seedで検証する
-- [ ] 改善が再現した候補だけ採用判断を更新する
+- [x] E2 `upsample-conv`を20 epochで再実行する
+- [x] E4 `attention-8x8`を20 epochで再実行する
+- [x] E5 `deeper-unet`を20 epochで再実行する
+- [x] 各候補をbaselineとE1に比較する
+- [x] 5 epoch時点の判断が妥当だったか候補ごとに記録する
+- [-] 20 epochで改善した候補を追加seedで検証する
+- [-] 改善が再現した候補だけ採用判断を更新する
 
 ## 実験カード
 
@@ -242,17 +242,19 @@ baseline Run IDs: 988df7ecbf3c4ef0a0f8b874b0e2d2, 6d0fb40829474499b852d51f124c2f
 - [x] 変更をcommitする
 - [x] Phase 1の短縮実験を実行する
 - [x] 生成画像のアーティファクトを確認する
-- [-] Phase 2へ進めるか判断する（5 epochでは不採用、20 epoch再検証待ち）
+- [-] Phase 2へ進めるか判断する（20 epochで改善、追加seed検証待ち）
 
 結果:
 
 ```text
-Run: 最新MLflow Run / `upsample-conv` / FINISHED
-Train loss: 0.3561 → 0.2156（5 epoch）
-Validation loss: 0.2614 → 0.2131（5 epoch）
+Run: `e5b26f83fd5c4537a7a9ada15da7759b` / FINISHED
+Train loss: 0.3561 → 0.1931（20 epoch）
+Validation loss: 0.2614 → 0.1926（20 epoch）
 生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
-所見: baseline（validation 0.2125）より0.3%悪化。明確な改善なし。
-採用判断: 5 epochでは不採用としたが、早期収束仮説の妥当性確認のため20 epoch再検証へ進める。
+パラメータ数: 10,227,715
+学習時間: 287.451秒
+所見: baseline（seed 42: validation 0.1931）より約0.3%改善。5 epochでは0.2131で悪化していたため、早期スクリーニングによる棄却は不適切だった。
+採用判断: 20 epochではbaseline（seed 42: 0.1931）を約0.3%上回った。5 epochだけで棄却する判断は誤りだった。改善幅が小さいため追加seed検証へ進める。
 ```
 
 ### E3: Transformerなし
@@ -295,13 +297,14 @@ Validation loss: 0.2632 → 0.1925（20 epoch）
 結果:
 
 ```text
-Run: 最新MLflow Run / `attention-8x8` / FINISHED
-Train loss: 0.3664 → 0.2159（5 epoch）
-Validation loss: 0.2676 → 0.2126（5 epoch）
+Run: `b34c59f2244c45a68c5760ee73b14d24` / FINISHED
+Train loss: 0.3664 → 0.1919（20 epoch）
+Validation loss: 0.2676 → 0.1919（20 epoch）
 生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
-パラメータ数: 11,033,859
-所見: baseline（validation 0.2125）と同等以下で、追加計算量に見合う改善なし。
-採用判断: 5 epochでは不採用としたが、早期収束仮説の妥当性確認のため20 epoch再検証へ進める。
+ パラメータ数: 11,033,859
+学習時間: 286.066秒
+所見: baseline（seed 42: validation 0.1931）より約0.65%改善。5 epochでは0.2126で同等以下だったため、早期スクリーニングによる棄却は不適切だった。
+採用判断: 20 epochではbaseline（seed 42: 0.1931）を約0.65%上回った。5 epochだけで棄却する判断は誤りだった。追加seed検証へ進める。
 ```
 
 ### E5: deeper U-Net
@@ -314,19 +317,19 @@ Validation loss: 0.2676 → 0.2126（5 epoch）
 - [x] 変更をcommitする
 - [x] Phase 1の短縮実験を実行する
 - [x] 計算時間とGPUメモリを確認する
-- [-] Phase 2へ進めるか判断する（5 epochでは不採用、20 epoch再検証待ち）
+- [x] Phase 2へ進めるか判断する（20 epochでも不採用）
 
 結果:
 
 ```text
-Run:
-Train loss:
-Validation loss:
-生成画像:
-パラメータ数:
-学習時間:
-所見:
-採用判断:
+Run: `d8a2da95598b4c599a53c6ad3dad5afe` / FINISHED
+Train loss: 0.3984 → 0.1949（20 epoch）
+Validation loss: 0.2856 → 0.1944（20 epoch）
+生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
+パラメータ数: 13,329,667
+学習時間: 377.362秒
+所見: baseline（seed 42: 0.1931）より約0.66%悪化。20 epochでも改善せず、5 epochの棄却判断は妥当。
+採用判断: 不採用。追加seed検証は行わない。
 ```
 
 ## 採用判断の基準
