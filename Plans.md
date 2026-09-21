@@ -265,20 +265,20 @@ Validation loss: 0.2632 → 0.1925（20 epoch）
 - [x] 構文チェックを実行する
 - [x] 小さなforwardを実行する
 - [x] 変更をcommitする
-- [-] Phase 1の短縮実験を実行する
+- [x] Phase 1の短縮実験を実行する
 - [ ] baselineおよびE3と比較する
 - [ ] Phase 2へ進めるか判断する
 
 結果:
 
 ```text
-Run:
-Train loss:
-Validation loss:
-生成画像:
-パラメータ数:
-所見:
-採用判断:
+Run: 最新MLflow Run / `attention-8x8` / FINISHED
+Train loss: 0.3664 → 0.2159（5 epoch）
+Validation loss: 0.2676 → 0.2126（5 epoch）
+生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
+パラメータ数: 11,033,859
+所見: baseline（validation 0.2125）と同等以下で、追加計算量に見合う改善なし。
+採用判断: 不採用。標準20 epochには進めない。
 ```
 
 ### E5: deeper U-Net
