@@ -1,6 +1,7 @@
 import itertools
 import math
 import random
+import time
 
 import matplotlib.pyplot as plt
 import mlflow
@@ -18,13 +19,14 @@ print(f"device: {device}")
 
 def set_seed(seed):
     random.seed(seed)
+    torch.use_deterministic_algorithms(False)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
 
-def get_cifar10_loader(data_dir="data", batch_size=128, num_workers=4):
-    transform = transforms.Compose(
+def get_cifar10_loader(data_dir="data", batch_size=128, num_workers=0, seed=42):
+    train_transform = transforms.Compose(
         [
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
@@ -32,16 +34,38 @@ def get_cifar10_loader(data_dir="data", batch_size=128, num_workers=4):
         ]
     )
 
-    dataset = datasets.CIFAR10(root=data_dir, download=True, transform=transform)
+    validation_transform = transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        ]
+    )
 
-    loader = DataLoader(
-        dataset,
+    train_dataset = datasets.CIFAR10(
+        root=data_dir, train=True, download=True, transform=train_transform
+    )
+    validation_dataset = datasets.CIFAR10(
+        root=data_dir, train=False, download=True, transform=validation_transform
+    )
+
+    generator = torch.Generator()
+    generator.manual_seed(seed)
+    train_loader = DataLoader(
+        train_dataset,
         shuffle=True,
         batch_size=batch_size,
         num_workers=num_workers,
         pin_memory=torch.cuda.is_available(),
+        generator=generator,
     )
-    return loader
+    validation_loader = DataLoader(
+        validation_dataset,
+        shuffle=False,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        pin_memory=torch.cuda.is_available(),
+    )
+    return train_loader, validation_loader
 
 
 def plot_images(images, path="images/generated.png"):
@@ -52,6 +76,18 @@ def plot_images(images, path="images/generated.png"):
     plt.imshow(grid.permute(1, 2, 0))
     plt.axis("off")
     plt.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close()
+
+
+def plot_losses(train_losses, validation_losses, path="images/loss_curve.png"):
+    plt.figure()
+    plt.plot(range(1, len(train_losses) + 1), train_losses, label="train")
+    plt.plot(range(1, len(validation_losses) + 1), validation_losses, label="validation")
+    plt.xlabel("epoch")
+    plt.ylabel("velocity MSE")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(path, dpi=150)
     plt.close()
 
 
@@ -181,9 +217,13 @@ def train_model(
     num_epochs,
     device,
     lr=2e-4,
+    seed=42,
 ):
-    loader = get_cifar10_loader(batch_size=batch_size)
+    loader, validation_loader = get_cifar10_loader(batch_size=batch_size, seed=seed)
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=0.0)
+    train_losses = []
+    validation_losses = []
+    train_start = time.perf_counter()
 
     for epoch in range(1, num_epochs + 1):
         total_loss = 0.0
@@ -208,24 +248,54 @@ def train_model(
             num_samples += images.shape[0]
 
         avg_loss = total_loss / num_samples
+        train_losses.append(avg_loss)
+
+        model.eval()
+        validation_total = 0.0
+        validation_samples = 0
+        with torch.no_grad():
+            for images, _ in validation_loader:
+                images = images.to(device, non_blocking=True)
+                t = torch.rand(images.shape[0], 1, 1, 1, device=device)
+                x_0 = torch.randn_like(images)
+                x_t = (1 - t) * x_0 + t * images
+                target_velocity = images - x_0
+                with torch.autocast(
+                    device_type=device.type,
+                    dtype=torch.bfloat16,
+                    enabled=device.type == "cuda",
+                ):
+                    pred_velocity = model(x_t, t)
+                    validation_loss = (
+                        (pred_velocity.float() - target_velocity) ** 2
+                    ).mean()
+                validation_total += validation_loss.item() * images.shape[0]
+                validation_samples += images.shape[0]
+        avg_validation_loss = validation_total / validation_samples
+        validation_losses.append(avg_validation_loss)
+        model.train()
         mlflow.log_metric("train_loss", avg_loss, step=epoch)
-        print(f"epoch {epoch:>4}/{num_epochs} | loss {avg_loss:.4f}")
+        mlflow.log_metric("validation_loss", avg_validation_loss, step=epoch)
+        print(
+            f"epoch {epoch:>4}/{num_epochs} | "
+            f"train {avg_loss:.4f} | validation {avg_validation_loss:.4f}"
+        )
 
     checkpoint_path = f"models/unet_model_{num_epochs}.pt"
     torch.save(model.state_dict(), checkpoint_path)
     mlflow.log_artifact(checkpoint_path)
-    return model
+    return model, train_losses, validation_losses, time.perf_counter() - train_start
 
 
 @torch.no_grad()
-def sample(model, num_samples=16, num_steps=50, device=device):
+def sample(model, num_samples=16, num_steps=50, device=device, generator=None):
     """Integrate the velocity field from t=0 to t=1 with Heun's method.
 
     Heun is 2nd order and costs two model calls per step, so `num_steps=50`
     uses the same number of function evaluations as 100 Euler steps.
     """
     model.eval()
-    x_t = torch.randn(num_samples, 3, 32, 32, device=device)
+    x_t = torch.randn(num_samples, 3, 32, 32, device=device, generator=generator)
     time_grid = torch.linspace(0.0, 1.0, num_steps + 1, device=device)
 
     for t, t_next in itertools.pairwise(time_grid):
@@ -264,17 +334,30 @@ if __name__ == "__main__":
                     parameter.numel() for parameter in model.parameters()
                 ),
                 "device": str(device),
+                "num_workers": 0,
             }
         )
 
-        model = train_model(
+        model, train_losses, validation_losses, training_seconds = train_model(
             model,
             batch_size,
             num_epochs,
             device,
             lr=learning_rate,
+            seed=seed,
         )
+        mlflow.log_param("training_seconds", round(training_seconds, 3))
 
         generated_path = "images/generated.png"
-        plot_images(sample(model), path=generated_path)
+        sampling_generator = torch.Generator(device=device)
+        sampling_generator.manual_seed(seed + 1)
+        sampling_start = time.perf_counter()
+        generated = sample(model, generator=sampling_generator)
+        sampling_seconds = time.perf_counter() - sampling_start
+        plot_images(generated, path=generated_path)
         mlflow.log_artifact(generated_path)
+        mlflow.log_param("sampling_seconds", round(sampling_seconds, 3))
+
+        loss_curve_path = "images/loss_curve.png"
+        plot_losses(train_losses, validation_losses, path=loss_curve_path)
+        mlflow.log_artifact(loss_curve_path)
