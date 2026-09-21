@@ -329,7 +329,7 @@ if __name__ == "__main__":
     batch_size = 128
     num_epochs = int(os.environ.get("NUM_EPOCHS", "20"))
     learning_rate = 2e-4
-    seed = 42
+    seed = int(os.environ.get("SEED", "42"))
     run_name = "attention-8x8"
 
     set_seed(seed)
