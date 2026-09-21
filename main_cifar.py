@@ -158,18 +158,6 @@ class UNet(nn.Module):
         self.encoder3 = conv_block(256, 256)
         self.down3 = down_block(256, 512)
 
-        self.transformer = nn.TransformerEncoderLayer(
-            d_model=512,
-            nhead=8,
-            dim_feedforward=2048,
-            dropout=0.0,
-            activation="gelu",
-            batch_first=True,
-            norm_first=True,
-        )
-        self.pos_embedding = nn.Parameter(torch.zeros(1, 16, 512))
-        nn.init.normal_(self.pos_embedding, std=0.02)
-
         self.up3 = up_block(512, 256)
         self.decoder3 = conv_block(256 + 256, 256)
         self.up2 = up_block(256, 128)
@@ -193,12 +181,6 @@ class UNet(nn.Module):
 
         x3 = self.down3(x2)  # (B, 512, 4, 4)
         x3 = x3 + self.time_proj_512(temb)[:, :, None, None]
-
-        batch_size, channels, height, width = x3.shape
-        x3 = x3.flatten(2).transpose(1, 2)
-        x3 = x3 + self.pos_embedding
-        x3 = self.transformer(x3)
-        x3 = x3.transpose(1, 2).reshape(batch_size, channels, height, width)
 
         x = self.up3(x3)  # (B, 256, 8, 8)
         x = self.decoder3(torch.cat((x, x2), dim=1))  # (B, 256, 8, 8)
@@ -314,7 +296,7 @@ if __name__ == "__main__":
     num_epochs = int(os.environ.get("NUM_EPOCHS", "20"))
     learning_rate = 2e-4
     seed = 42
-    run_name = "baseline"
+    run_name = "no-bottleneck-attention"
 
     set_seed(seed)
     mlflow.set_experiment("CIFAR10-UNet")
@@ -324,7 +306,7 @@ if __name__ == "__main__":
 
         mlflow.log_params(
             {
-                "model": "UNet-baseline",
+                "model": "UNet-no-bottleneck-attention",
                 "batch_size": batch_size,
                 "num_epochs": num_epochs,
                 "learning_rate": learning_rate,
