@@ -123,7 +123,7 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 - [x] `no-bottleneck-attention`を実行する
 - [ ] `upsample-conv`を実行する
 - [x] `attention-8x8`を実行する
-- [ ] `deeper-unet`を実行する
+- [x] `deeper-unet`を実行する
 - [ ] 各Runのloss曲線を比較する
 - [ ] 各Runの生成画像を比較する
 - [ ] 各Runの計算時間とGPUメモリを比較する
@@ -283,13 +283,13 @@ Validation loss: 0.2676 → 0.2126（5 epoch）
 
 ### E5: deeper U-Net
 
-- [ ] `main`から`feature/deeper-unet`を作成
-- [ ] 各解像度のResidual Block数を増やす
+- [x] `main`から`feature/deeper-unet`を作成
+- [x] 各解像度のResidual Block数を増やす
 - [ ] FiLMを同時に追加する場合は別実験として分離する
-- [ ] 構文チェックを実行する
-- [ ] 小さなforwardを実行する
-- [ ] 変更をcommitする
-- [ ] Phase 1の短縮実験を実行する
+- [x] 構文チェックを実行する
+- [x] 小さなforwardを実行する
+- [x] 変更をcommitする
+- [-] Phase 1の短縮実験を実行する
 - [ ] 計算時間とGPUメモリを確認する
 - [ ] Phase 2へ進めるか判断する
 

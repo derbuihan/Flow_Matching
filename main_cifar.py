@@ -151,11 +151,20 @@ class UNet(nn.Module):
         self.time_proj_256 = nn.Linear(128, 256)
         self.time_proj_512 = nn.Linear(128, 512)
 
-        self.encoder1 = conv_block(in_channels, 64)
+        self.encoder1 = nn.Sequential(
+            conv_block(in_channels, 64),
+            conv_block(64, 64),
+        )
         self.down1 = down_block(64, 128)
-        self.encoder2 = conv_block(128, 128)
+        self.encoder2 = nn.Sequential(
+            conv_block(128, 128),
+            conv_block(128, 128),
+        )
         self.down2 = down_block(128, 256)
-        self.encoder3 = conv_block(256, 256)
+        self.encoder3 = nn.Sequential(
+            conv_block(256, 256),
+            conv_block(256, 256),
+        )
         self.down3 = down_block(256, 512)
 
         self.transformer = nn.TransformerEncoderLayer(
@@ -171,11 +180,20 @@ class UNet(nn.Module):
         nn.init.normal_(self.pos_embedding, std=0.02)
 
         self.up3 = up_block(512, 256)
-        self.decoder3 = conv_block(256 + 256, 256)
+        self.decoder3 = nn.Sequential(
+            conv_block(256 + 256, 256),
+            conv_block(256, 256),
+        )
         self.up2 = up_block(256, 128)
-        self.decoder2 = conv_block(128 + 128, 128)
+        self.decoder2 = nn.Sequential(
+            conv_block(128 + 128, 128),
+            conv_block(128, 128),
+        )
         self.up1 = up_block(128, 64)
-        self.decoder1 = conv_block(64 + 64, 64)
+        self.decoder1 = nn.Sequential(
+            conv_block(64 + 64, 64),
+            conv_block(64, 64),
+        )
         self.output = nn.Conv2d(64, out_channels, 3, padding=1)
 
     def forward(self, x, t):
@@ -314,7 +332,7 @@ if __name__ == "__main__":
     num_epochs = int(os.environ.get("NUM_EPOCHS", "20"))
     learning_rate = 2e-4
     seed = 42
-    run_name = "baseline"
+    run_name = "deeper-unet"
 
     set_seed(seed)
     mlflow.set_experiment("CIFAR10-UNet")
@@ -324,7 +342,7 @@ if __name__ == "__main__":
 
         mlflow.log_params(
             {
-                "model": "UNet-baseline",
+                "model": "UNet-deeper-unet",
                 "batch_size": batch_size,
                 "num_epochs": num_epochs,
                 "learning_rate": learning_rate,
