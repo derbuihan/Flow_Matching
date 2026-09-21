@@ -131,7 +131,7 @@ checkpoint: `unet_model_20.pt`（約40.9 MB、artifact登録済み）
 
 ### Phase 2: 標準条件での比較
 
-- [x] Phase 1で選んだ候補を20 epochで実行する（E1）
+- [x] Phase 1で選んだ候補を20 epochで実行する（E1、E3）
 - [x] baselineと同じseedで比較する
 - [x] train lossを比較する
 - [x] validation lossを比較する
@@ -247,13 +247,14 @@ Validation loss: 0.2614 → 0.2131（5 epoch）
 結果:
 
 ```text
-Run: 最新MLflow Run / `no-bottleneck-attention` / FINISHED
-Train loss: 0.3666 → 0.2150（5 epoch）
-Validation loss: 0.2620 → 0.2110（5 epoch）
+Run: `ee7dc09352964ed49bbb62f89d2885c5` / FINISHED
+Train loss: 0.3667 → 0.1926（20 epoch）
+Validation loss: 0.2632 → 0.1925（20 epoch）
 生成画像: `generated.png`、loss曲線、checkpointをartifact登録済み
 パラメータ数: 7,067,139
-所見: baseline（validation 0.2125）より約0.7%改善。E1より軽量。
-採用判断: Phase 2の20 epoch比較へ進める
+学習時間: 252.258秒、生成時間: 0.723秒
+所見: baseline（validation 0.1931）より約0.3%改善。E1（0.1909）より悪いが、パラメータ数は約31%、生成時間は約52%少ない。
+採用判断: 軽量候補としてseed再検証対象に残す。単独での最終採用は保留。
 ```
 
 ### E4: 8×8 Attention
